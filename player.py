@@ -23,6 +23,7 @@ class Player(pg.sprite.Sprite):
         self.frame_index = 0
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center = START_POS)
+        self.z = LAYERS['main'] # layer level, as in (x, y, z)
 
         # movement
         self.direction = pg.math.Vector2()
@@ -94,46 +95,59 @@ class Player(pg.sprite.Sprite):
         # cannot move while using tool
         if not self.timers['tool use'].active:
             # directions
-            if keys[K_w] or keys[K_UP]:
+            if keys[K_w]:
                 self.direction.y = -1
                 self.status = 'up'
 
-            elif keys[K_s] or keys[K_DOWN]:
+            elif keys[K_s]:
                 self.direction.y = 1
                 self.status = 'down'
 
-            if keys[K_a] or keys[K_LEFT]:
+            if keys[K_a]:
                 self.direction.x = -1
                 self.status = 'left'
 
-            elif keys[K_d] or keys[K_RIGHT]:
+            elif keys[K_d]:
                 self.direction.x = 1
                 self.status = 'right'
 
             if self.direction.magnitude() > 0:
                 self.direction = self.direction.normalize()
 
+
+            # change tool
+            if not self.timers['tool change'].active:
+                if keys[K_LEFT]:
+                    self.timers['tool change'].activate()
+                    self.tools.rotate(1)
+                    self.selected_tool = self.tools[0]
+                elif keys[K_RIGHT]:
+                    self.timers['tool change'].activate()
+                    self.tools.rotate(-1)
+                    self.selected_tool = self.tools[0]
+
             # tool use
             if keys[K_SPACE]:
                 self.timers['tool use'].activate()
                 self.frame_index = 0 
 
-            # change tool
-            if keys[K_LALT] and not self.timers['tool change'].active:
-                self.timers['tool change'].activate()
-                self.tools.rotate(-1)
-                self.selected_tool = self.tools[0]
+            # change seed
+            if not self.timers['seed change'].active:
+                if keys[K_DOWN]:
+                    self.timers['seed change'].activate()
+                    self.seeds.rotate(1)
+                    self.selected_seed = self.seeds[0]
+                elif keys[K_UP]:
+                    self.timers['seed change'].activate()
+                    self.seeds.rotate(-1)
+                    self.selected_seed = self.seeds[0]
 
-            # sowing
+            # use seed
             if keys[K_RCTRL]:
                 self.timers['seed'].activate()
                 self.frame_index = 0
 
-            # change seed
-            if keys[K_RALT]:
-                self.timers['seed change'].activate()
-                self.seeds.rotate(-1)
-                self.selected_seed = self.seeds[0]
+            
 
 
     def animate(self):
