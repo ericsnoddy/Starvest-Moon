@@ -20,8 +20,9 @@ class Timer:
 
 
     def update(self):
-        current_time = pg.time.get_ticks()
-        if current_time - self.start_time >= self.duration:
-            self.deactivate()
-            if self.func:
-                self.func()
+        if self.active:
+            current_time = pg.time.get_ticks()
+            if current_time - self.start_time >= self.duration:
+                self.deactivate()
+                if self.func:
+                    self.func()

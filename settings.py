@@ -12,7 +12,7 @@ OVERLAY_POSITIONS = {
 	'tool' : (40, HEIGHT - 15), 
 	'seed': (70, HEIGHT - 5)}
 
-# These will be converted to pygame.math.Vector2
+# These will be converted to pg.math.Vector2
 PLAYER_TOOL_OFFSET = {
 	'left': (-50,40),
 	'right': (50,40),

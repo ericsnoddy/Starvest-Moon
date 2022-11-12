@@ -35,11 +35,16 @@ class Player(pg.sprite.Sprite):
         self.selected_tool = 'axe'
         
     def update(self):
+        self.input()
         self.movement()
         self.get_status()
         self.animate()
         for timer in self.timers.values():
             timer.update()
+
+
+    def use_tool(self):
+        pass
 
 
     def get_status(self):
@@ -50,40 +55,10 @@ class Player(pg.sprite.Sprite):
 
         # tool use
         if self.timers['tool use'].active:
-            print('tool is being used')
-
-    def animate(self):
-        anim_speed = PLAYER_ANIM_RATE * self.game.dt # frame independent anim speed
-        self.frame_index += anim_speed
-        if int(self.frame_index) >= len(self.animations[self.status]):
-            self.frame_index = 0
-        self.image = self.animations[self.status][int(self.frame_index)]
+            self.status = self.status.split('_')[0] + '_' + self.selected_tool
 
 
     def movement(self):
-        self.direction = pg.math.Vector2(0, 0)
-        keys = pg.key.get_pressed()
-
-        # directions
-        if keys[K_w] or keys[K_UP]:
-            self.direction.y = -1
-            self.status = 'up'
-
-        elif keys[K_s] or keys[K_DOWN]:
-            self.direction.y = 1
-            self.status = 'down'
-
-        if keys[K_a] or keys[K_LEFT]:
-            self.direction.x = -1
-            self.status = 'left'
-
-        elif keys[K_d] or keys[K_RIGHT]:
-            self.direction.x = 1
-            self.status = 'right'
-
-        if self.direction.magnitude() > 0:
-            self.direction = self.direction.normalize()
-
         # frame independent speed
         speed = self.speed * self.game.dt
 
@@ -95,13 +70,45 @@ class Player(pg.sprite.Sprite):
         self.pos.y += self.direction.y * speed
         self.rect.centery = self.pos.y
 
-        # tool use
-        if keys[K_SPACE]:
-            self.timers['tool use'].activate()
+
+    def input(self):
+        self.direction = pg.math.Vector2()
+        keys = pg.key.get_pressed()
+
+        # cannot move while using tool
+        if not self.timers['tool use'].active:
+            # directions
+            if keys[K_w] or keys[K_UP]:
+                self.direction.y = -1
+                self.status = 'up'
+
+            elif keys[K_s] or keys[K_DOWN]:
+                self.direction.y = 1
+                self.status = 'down'
+
+            if keys[K_a] or keys[K_LEFT]:
+                self.direction.x = -1
+                self.status = 'left'
+
+            elif keys[K_d] or keys[K_RIGHT]:
+                self.direction.x = 1
+                self.status = 'right'
+
+            if self.direction.magnitude() > 0:
+                self.direction = self.direction.normalize()
 
 
-    def use_tool(self):
-        print(self.selected_tool)
+            # tool use
+            if keys[K_SPACE]:
+                self.timers['tool use'].activate()
+
+
+    def animate(self):
+        anim_speed = PLAYER_ANIM_RATE * self.game.dt # frame independent anim speed
+        self.frame_index += anim_speed
+        if int(self.frame_index) >= len(self.animations[self.status]):
+            self.frame_index = 0
+        self.image = self.animations[self.status][int(self.frame_index)]
 
 
     def import_assets(self):
