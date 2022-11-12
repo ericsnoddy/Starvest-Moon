@@ -1,3 +1,6 @@
+# std lib
+from collections import deque
+
 # pip install
 import pygame as pg
 from pygame.locals import *
@@ -8,10 +11,9 @@ from settings import *
 from timer import *
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game):
-        super().__init__()
+    def __init__(self, game, group):
+        super().__init__(group)
         self.game = game
-        self.game.level.all_sprites.add(self)
 
         # init methods
         self.import_assets()    # inits self.animations
@@ -29,11 +31,21 @@ class Player(pg.sprite.Sprite):
 
         # timers
         self.timers = {
-			'tool use': Timer(350, self.use_tool)}
+			'tool use': Timer(350, self.use_tool),
+            'tool change': Timer(200),
+            'seed': Timer(350, self.use_seed),
+            'seed change': Timer(350)
+        }
 
         # tools
-        self.selected_tool = 'axe'
+        self.tools = deque(['axe', 'hoe', 'water'])
+        self.selected_tool = self.tools[0]
+
+        # seeds
+        self.seeds = deque(['corn', 'tomato'])
+        self.selected_seed = self.seeds[0]
         
+
     def update(self):
         self.input()
         self.movement()
@@ -44,6 +56,10 @@ class Player(pg.sprite.Sprite):
 
 
     def use_tool(self):
+        pass
+
+
+    def use_seed(self):
         pass
 
 
@@ -97,16 +113,33 @@ class Player(pg.sprite.Sprite):
             if self.direction.magnitude() > 0:
                 self.direction = self.direction.normalize()
 
-
             # tool use
             if keys[K_SPACE]:
                 self.timers['tool use'].activate()
+                self.frame_index = 0 
+
+            # change tool
+            if keys[K_LALT] and not self.timers['tool change'].active:
+                self.timers['tool change'].activate()
+                self.tools.rotate(-1)
+                self.selected_tool = self.tools[0]
+
+            # sowing
+            if keys[K_RCTRL]:
+                self.timers['seed'].activate()
+                self.frame_index = 0
+
+            # change seed
+            if keys[K_RALT]:
+                self.timers['seed change'].activate()
+                self.seeds.rotate(-1)
+                self.selected_seed = self.seeds[0]
 
 
     def animate(self):
         anim_speed = PLAYER_ANIM_RATE * self.game.dt # frame independent anim speed
         self.frame_index += anim_speed
-        if int(self.frame_index) >= len(self.animations[self.status]):
+        if self.frame_index >= len(self.animations[self.status]):
             self.frame_index = 0
         self.image = self.animations[self.status][int(self.frame_index)]
 

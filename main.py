@@ -22,12 +22,10 @@ class Game:
     def new_game(self):
         # level must be run first
         self.level = Level(self)
-        self.player = Player(self)
-    
+ 
 
     def update(self):
         self.level.update()
-        self.player.update()
 
         # display
         pg.display.flip()
