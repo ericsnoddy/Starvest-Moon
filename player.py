@@ -11,9 +11,8 @@ from settings import *
 from timer import *
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, group):
+    def __init__(self, group):
         super().__init__(group)
-        self.game = game
 
         # init methods
         self.import_assets()    # inits self.animations
@@ -47,11 +46,11 @@ class Player(pg.sprite.Sprite):
         self.selected_seed = self.seeds[0]
         
 
-    def update(self):
+    def update(self, dt):
         self.input()
-        self.movement()
+        self.movement(dt)
         self.get_status()
-        self.animate()
+        self.animate(dt)
         for timer in self.timers.values():
             timer.update()
 
@@ -75,9 +74,9 @@ class Player(pg.sprite.Sprite):
             self.status = self.status.split('_')[0] + '_' + self.selected_tool
 
 
-    def movement(self):
+    def movement(self, dt):
         # frame independent speed
-        speed = self.speed * self.game.dt
+        speed = self.speed * dt
 
         # horizontal
         self.pos.x += self.direction.x * speed
@@ -147,11 +146,9 @@ class Player(pg.sprite.Sprite):
                 self.timers['seed'].activate()
                 self.frame_index = 0
 
-            
 
-
-    def animate(self):
-        anim_speed = PLAYER_ANIM_RATE * self.game.dt # frame independent anim speed
+    def animate(self, dt):
+        anim_speed = PLAYER_ANIM_RATE * dt # frame independent anim speed
         self.frame_index += anim_speed
         if self.frame_index >= len(self.animations[self.status]):
             self.frame_index = 0

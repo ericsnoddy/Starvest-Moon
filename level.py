@@ -3,9 +3,12 @@ import pygame as pg
 
 # local
 from settings import *
+from support import *
 from player import *
 from overlay import *
 from sprites import *
+from pytmx.util_pygame import load_pygame
+
 
 class Level:
     def __init__(self, game):
@@ -19,19 +22,49 @@ class Level:
 
 
     def setup(self):
+        # load the tmx tilemap
+        tmx_data = load_pygame('data/map.tmx')
+
+        # house
+        for layer in ['HouseFloor', 'HouseFurnitureBottom']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                GenericSprite((x * TS, y * TS), surf, [self.all_sprites], LAYERS['house bottom'])
+
+        for layer in ['HouseWalls', 'HouseFurnitureTop']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                GenericSprite((x * TS, y * TS), surf, [self.all_sprites])
+
+        # fence
+        for x, y, surf in tmx_data.get_layer_by_name('Fence').tiles():
+            GenericSprite((x * TS, y * TS), surf, [self.all_sprites])
+
+        # water
+        water_frames = import_folder('graphics/water')
+        for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
+            Water((x * TS, y * TS), water_frames, [self.all_sprites])
+
+        # trees
+
+        # wildflowers
+
+        # player
+        self.player = Player(self.all_sprites)
+
+        # ground
         GenericSprite(
             pos = (0, 0),
             surf = pg.image.load('graphics/world/ground.png').convert_alpha(),
             groups = [self.all_sprites],
             z = LAYERS['ground']
-        )
-        self.player = Player(self.game, self.all_sprites)
+        )        
+
+        # gui
         self.overlay = Overlay(self.player)
 
 
     def update(self):
-        self.all_sprites.update()
-        self.player.update()
+        self.all_sprites.update(self.game.dt)
+        self.player.update(self.game.dt)
     
 
     def draw(self):
