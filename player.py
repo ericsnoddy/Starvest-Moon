@@ -20,6 +20,7 @@ class Player(pg.sprite.Sprite):
         self.frame_index = 0  # animation frame
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center = pos)
+        self.z = LAYERS['main']  # layer level
 
         # movement
         self.direction = pg.math.Vector2()
@@ -47,13 +48,9 @@ class Player(pg.sprite.Sprite):
         self.input()
         self.move(dt)
         self.get_status()
-        self.update_timers()
+        [timer.update() for timer in self.timers.values() if timer.active]
         self.animate(dt)        
         
-
-    def update_timers(self):
-        [timer.update() for timer in self.timers.values() if timer.active]
-
 
     def use_tool(self):
         print(f'Using {self.selected_tool}')
