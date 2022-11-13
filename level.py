@@ -4,9 +4,11 @@ from pytmx.util_pygame import load_pygame
 
 # local
 from settings import *
+from support import import_folder
 from player import Player
 from overlay import Overlay
-from sprites import BasicSprite
+from sprites import *
+
 
 class Level:
     def __init__(self):
@@ -18,8 +20,35 @@ class Level:
 
 
     def setup(self):
+        # load tmx tilemap
+        tmx_data = load_pygame('data/map.tmx')
+
         # layers - no need to order
+
+        # ground
         BasicSprite((0, 0), pg.image.load('graphics/world/ground.png').convert_alpha(), [self.all_sprites], LAYERS['ground'])
+
+        # house
+        for layer in ['HouseFloor', 'HouseFurnitureBottom']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                BasicSprite((x * TS, y * TS), surf, [self.all_sprites], LAYERS['house bottom'])
+
+        for layer in ['HouseWalls', 'HouseFurnitureTop']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                BasicSprite((x * TS, y * TS), surf, [self.all_sprites])
+
+        # fence
+        for x, y, surf in tmx_data.get_layer_by_name('Fence').tiles():
+            BasicSprite((x * TS, y * TS), surf, [self.all_sprites])
+
+        # water
+        water_frames = import_folder('graphics/water')
+        for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
+            AnimatedSprite((x * TS, y * TS), water_frames, [self.all_sprites])
+
+        # flora
+        for obj in tmx_data.get_layer_by_name('Decoration'):
+            Flora((obj.x * TS, obj.y * TS), obj.image, [self.all_sprites])
 
         # player
         self.player = Player(START_POS, self.all_sprites)
@@ -33,6 +62,7 @@ class Level:
 
 
     def draw(self):
+        self.win.fill('black')
         self.all_sprites.draw(self.win, self.player)
         self.overlay.draw(self.win)
 
