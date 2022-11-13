@@ -22,7 +22,6 @@ class Game:
             self.level.run(self.dt)
             self.check_events()
             self.update()
-            self.draw()
 
 
     def check_events(self):
@@ -36,10 +35,6 @@ class Game:
         self.dt = self.clock.tick(FPS) / 1000
         pg.display.set_caption(f'{self.clock.get_fps() :.1f}')
         pg.display.flip()
-
-
-    def draw(self):
-        self.win.fill('black')
 
 
 if __name__ == '__main__':
