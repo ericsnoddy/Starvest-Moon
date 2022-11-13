@@ -13,8 +13,6 @@ from sprites import *
 class Level:
     def __init__(self):
         self.win = pg.display.get_surface()
-
-        # sprite groups
         self.all_sprites = CameraGroup()
         self.setup()        
 
@@ -46,9 +44,16 @@ class Level:
         for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
             AnimatedSprite((x * TS, y * TS), water_frames, [self.all_sprites])
 
+        # trees
+        for obj in tmx_data.get_layer_by_name('Trees'):
+            Tree((obj.x * TS, obj.y * TS), obj.image, [self.all_sprites], obj.name)
+
         # flora
         for obj in tmx_data.get_layer_by_name('Decoration'):
             Flora((obj.x * TS, obj.y * TS), obj.image, [self.all_sprites])
+
+        
+
 
         # player
         self.player = Player(START_POS, self.all_sprites)
