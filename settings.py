@@ -4,10 +4,10 @@ FPS = 60
 
 # player
 START_POS = (640, 360)
-PLAYER_SPEED = 200
+PLAYER_SPEED = 350
 
 # animation
-PLAYER_ANIM_RATE = 2
+PLAYER_ANIM_RATE = 3
 WATER_ANIM_RATE = 5
 
 # overlay positions 

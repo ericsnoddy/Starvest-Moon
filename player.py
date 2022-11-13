@@ -4,25 +4,22 @@ from collections import deque
 # pip install
 import pygame as pg
 from pygame.locals import *
-from support import *
 
 # local
 from settings import *
-from timer import *
+from support import import_folder
+from timer import Timer
+
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, group):
-        super().__init__(group)
-
-        # init methods
-        self.import_assets()    # inits self.animations
-
-        # sprite attrs
+    def __init__(self, pos, group):
+        super().__init__(group)  # auto-adds class instance to sprite group   
+        self.animations = {}
+        self._import_assets()
         self.status = 'down_idle'
-        self.frame_index = 0
+        self.frame_index = 0  # animation frame
         self.image = self.animations[self.status][self.frame_index]
-        self.rect = self.image.get_rect(center = START_POS)
-        self.z = LAYERS['main'] # layer level, as in (x, y, z)
+        self.rect = self.image.get_rect(center = pos)
 
         # movement
         self.direction = pg.math.Vector2()
@@ -33,8 +30,8 @@ class Player(pg.sprite.Sprite):
         self.timers = {
 			'tool use': Timer(350, self.use_tool),
             'tool change': Timer(200),
-            'seed': Timer(350, self.use_seed),
-            'seed change': Timer(350)
+            'seed use': Timer(350, self.use_seed),
+            'seed change': Timer(200)
         }
 
         # tools
@@ -44,23 +41,103 @@ class Player(pg.sprite.Sprite):
         # seeds
         self.seeds = deque(['corn', 'tomato'])
         self.selected_seed = self.seeds[0]
-        
+
 
     def update(self, dt):
         self.input()
-        self.movement(dt)
+        self.move(dt)
         self.get_status()
-        self.animate(dt)
-        for timer in self.timers.values():
-            timer.update()
+        self.update_timers()
+        self.animate(dt)        
+        
+
+    def update_timers(self):
+        [timer.update() for timer in self.timers.values() if timer.active]
 
 
     def use_tool(self):
-        pass
+        print(f'Using {self.selected_tool}')
 
 
     def use_seed(self):
-        pass
+        print(f'Using {self.selected_seed}')
+
+
+    def input(self):
+        keys = pg.key.get_pressed()
+
+        # do not accept key input while using tool
+        if not self.timers['tool use'].active:
+            # x-direction
+            if keys[K_a]:
+                self.direction.x = -1
+                self.status = 'left'
+            elif keys[K_d]:
+                self.direction.x = 1
+                self.status = 'right'
+            else:
+                self.direction.x = 0
+
+            # y-direction
+            if keys[K_w]:
+                self.direction.y = -1
+                self.status = 'up'
+            elif keys[K_s]:
+                self.direction.y = 1
+                self.status = 'down'
+            else:
+                self.direction.y = 0
+
+            # tool use
+            if keys[K_SPACE]:
+                self.timers['tool use'].activate()
+                self.direction = pg.math.Vector2()
+                self.frame_index = 0  # reset anim to frame 0
+
+            # tool change
+            if not self.timers['tool change'].active:
+                if keys[K_LEFT]:
+                    self.timers['tool change'].activate()
+                    self.tools.rotate(-1)
+                    self.selected_tool = self.tools[0]
+                elif keys[K_RIGHT]:
+                    self.timers['tool change'].activate()
+                    self.tools.rotate(1)
+                    self.selected_tool = self.tools[0]
+
+            # seed use
+            if keys[K_RCTRL]:
+                self.timers['seed use'].activate()
+                self.direction = pg.math.Vector2()
+                self.frame_index = 0
+
+            # seed change
+            if not self.timers['seed change'].active:
+                if keys[K_DOWN]:
+                    self.timers['seed change'].activate()
+                    self.seeds.rotate(-1)
+                    self.selected_seed = self.seeds[0]
+                elif keys[K_UP]:
+                    self.timers['seed change'].activate()
+                    self.seeds.rotate(1)
+                    self.selected_seed = self.seeds[0]
+
+            
+    def move(self, dt):
+        # normalize the diagonal
+        if self.direction.magnitude() > 0:
+            self.direction = self.direction.normalize()
+
+        # calc framerate-independent speed
+        speed = self.speed * dt
+
+        # horizontal
+        self.pos.x += self.direction.x * speed
+        self.rect.centerx = self.pos.x
+
+        # vertical
+        self.pos.y += self.direction.y * speed
+        self.rect.centery = self.pos.y
 
 
     def get_status(self):
@@ -74,96 +151,25 @@ class Player(pg.sprite.Sprite):
             self.status = self.status.split('_')[0] + '_' + self.selected_tool
 
 
-    def movement(self, dt):
-        # frame independent speed
-        speed = self.speed * dt
-
-        # horizontal
-        self.pos.x += self.direction.x * speed
-        self.rect.centerx = self.pos.x
-
-        # vertical
-        self.pos.y += self.direction.y * speed
-        self.rect.centery = self.pos.y
-
-
-    def input(self):
-        self.direction = pg.math.Vector2()
-        keys = pg.key.get_pressed()
-
-        # cannot move while using tool
-        if not self.timers['tool use'].active:
-            # directions
-            if keys[K_w]:
-                self.direction.y = -1
-                self.status = 'up'
-
-            elif keys[K_s]:
-                self.direction.y = 1
-                self.status = 'down'
-
-            if keys[K_a]:
-                self.direction.x = -1
-                self.status = 'left'
-
-            elif keys[K_d]:
-                self.direction.x = 1
-                self.status = 'right'
-
-            if self.direction.magnitude() > 0:
-                self.direction = self.direction.normalize()
-
-
-            # change tool
-            if not self.timers['tool change'].active:
-                if keys[K_LEFT]:
-                    self.timers['tool change'].activate()
-                    self.tools.rotate(1)
-                    self.selected_tool = self.tools[0]
-                elif keys[K_RIGHT]:
-                    self.timers['tool change'].activate()
-                    self.tools.rotate(-1)
-                    self.selected_tool = self.tools[0]
-
-            # tool use
-            if keys[K_SPACE]:
-                self.timers['tool use'].activate()
-                self.frame_index = 0 
-
-            # change seed
-            if not self.timers['seed change'].active:
-                if keys[K_DOWN]:
-                    self.timers['seed change'].activate()
-                    self.seeds.rotate(1)
-                    self.selected_seed = self.seeds[0]
-                elif keys[K_UP]:
-                    self.timers['seed change'].activate()
-                    self.seeds.rotate(-1)
-                    self.selected_seed = self.seeds[0]
-
-            # use seed
-            if keys[K_RCTRL]:
-                self.timers['seed'].activate()
-                self.frame_index = 0
-
-
     def animate(self, dt):
-        anim_speed = PLAYER_ANIM_RATE * dt # frame independent anim speed
-        self.frame_index += anim_speed
+        self.frame_index += PLAYER_ANIM_RATE * dt  # fractionally increase frame_index (FPS independent) as timer
         if self.frame_index >= len(self.animations[self.status]):
             self.frame_index = 0
-        self.image = self.animations[self.status][int(self.frame_index)]
-
-
-    def import_assets(self):
+        self.image = self.animations[self.status][int(self.frame_index)]  # index gradually increases until next int
+    
+    #
+    # SUPPORT METHODS
+    #
+    def _import_assets(self):
         self.animations = {'up': [],'down': [],'left': [],'right': [],
 						   'right_idle':[],'left_idle':[],'up_idle':[],'down_idle':[],
 						   'right_hoe':[],'left_hoe':[],'up_hoe':[],'down_hoe':[],
 						   'right_axe':[],'left_axe':[],'up_axe':[],'down_axe':[],
 						   'right_water':[],'left_water':[],'up_water':[],'down_water':[]}
 
+        # build a dict of lists of animation frames (img surfs), which are organized by player action
         for animation in self.animations.keys():
             full_path = 'graphics/character/' + animation
             self.animations[animation] = import_folder(full_path)
 
-
+        

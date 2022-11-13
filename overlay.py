@@ -5,6 +5,7 @@ import pygame as pg
 from settings import *
 from support import *
 
+
 class Overlay:
     def __init__(self, player):
         self.player = player
