@@ -12,7 +12,7 @@ from timer import Timer
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, pos, group):
+    def __init__(self, pos, group, collision_sprites, tree_sprites):
         super().__init__(group)  # auto-adds class instance to sprite group   
         self.animations = {}
         self._import_assets()
@@ -26,6 +26,10 @@ class Player(pg.sprite.Sprite):
         self.direction = pg.math.Vector2()
         self.pos = pg.math.Vector2(self.rect.center)
         self.speed = PLAYER_SPEED
+
+        # collision
+        self.hitbox = self.rect.copy().inflate(PLAYER_HITBOX_SCALE)
+        self.collision_sprites = collision_sprites
 
         # timers
         self.timers = {
@@ -43,17 +47,35 @@ class Player(pg.sprite.Sprite):
         self.seeds = deque(['corn', 'tomato'])
         self.selected_seed = self.seeds[0]
 
+        # interaction
+        self.tree_sprites = tree_sprites
+
 
     def update(self, dt):
         self.input()
         self.move(dt)
         self.get_status()
+        self.get_target_pos()
         [timer.update() for timer in self.timers.values() if timer.active]
         self.animate(dt)        
         
 
     def use_tool(self):
-        print(f'Using {self.selected_tool}')
+        if self.selected_tool == 'hoe':
+            pass
+        elif self.selected_tool == 'axe':
+            for tree in self.tree_sprites.sprites():
+                if tree.rect.collidepoint(self.target_pos):
+                    tree.damage()
+
+        elif self.selected_tool == 'water':
+            pass
+
+
+    def get_target_pos(self):
+        offset_vector = pg.math.Vector2(PLAYER_TOOL_OFFSET[self.status.split('_')[0]])
+        self.target_pos = self.rect.center + offset_vector
+        print(self.target_pos)
 
 
     def use_seed(self):
@@ -119,22 +141,47 @@ class Player(pg.sprite.Sprite):
                     self.seeds.rotate(1)
                     self.selected_seed = self.seeds[0]
 
-            
+    
+    def collision_check(self, direction):
+        for sprite in self.collision_sprites:
+            if hasattr(sprite, 'hitbox') and sprite.hitbox.colliderect(self.hitbox):
+                # keep player out of obstacle hitboxes by adjusting player pos after collision
+                if direction == 'horizontal':
+                    if self.direction.x > 0:  # moving right
+                        self.hitbox.right = sprite.hitbox.left
+                    if self.direction.x < 0:  # moving left
+                        self.hitbox.left = sprite.hitbox.right
+                    self.rect.centerx = self.hitbox.centerx
+                    self.pos.x = self.hitbox.centerx
+
+                elif direction == 'vertical':
+                    if self.direction.y > 0:  # moving down
+                        self.hitbox.bottom = sprite.hitbox.top
+                    if self.direction.y < 0:  # moving up
+                        self.hitbox.top = sprite.hitbox.bottom
+                    self.rect.centery = self.hitbox.centery
+                    self.pos.y = self.hitbox.centery
+
+
     def move(self, dt):
         # normalize the diagonal
         if self.direction.magnitude() > 0:
             self.direction = self.direction.normalize()
 
         # calc framerate-independent speed
-        speed = self.speed * dt
+        speed_dt = self.speed * dt
 
         # horizontal
-        self.pos.x += self.direction.x * speed
-        self.rect.centerx = self.pos.x
+        self.pos.x += self.direction.x * speed_dt
+        self.hitbox.centerx = round(self.pos.x)  # round to avoid truncating
+        self.rect.centerx = self.hitbox.centerx
+        self.collision_check('horizontal')
 
         # vertical
-        self.pos.y += self.direction.y * speed
-        self.rect.centery = self.pos.y
+        self.pos.y += self.direction.y * speed_dt
+        self.hitbox.centery = round(self.pos.y)
+        self.rect.centery = self.hitbox.centery
+        self.collision_check('vertical')
 
 
     def get_status(self):
@@ -150,8 +197,10 @@ class Player(pg.sprite.Sprite):
 
     def animate(self, dt):
         self.frame_index += PLAYER_ANIM_RATE * dt  # fractionally increase frame_index (FPS independent) as timer
-        if self.frame_index >= len(self.animations[self.status]):
-            self.frame_index = 0
+        self.frame_index %= len(self.animations[self.status])
+
+        # if self.frame_index >= len(self.animations[self.status]):
+        #     self.frame_index = 0
         self.image = self.animations[self.status][int(self.frame_index)]  # index gradually increases until next int
     
     #

@@ -14,6 +14,8 @@ class Level:
     def __init__(self):
         self.win = pg.display.get_surface()
         self.all_sprites = CameraGroup()
+        self.collision_sprites = pg.sprite.Group()
+        self.tree_sprites = pg.sprite.Group()
         self.setup()        
 
 
@@ -37,7 +39,7 @@ class Level:
 
         # fence
         for x, y, surf in tmx_data.get_layer_by_name('Fence').tiles():
-            BasicSprite((x * TS, y * TS), surf, [self.all_sprites])
+            BasicSprite((x * TS, y * TS), surf, [self.all_sprites, self.collision_sprites])
 
         # water
         water_frames = import_folder('graphics/water')
@@ -46,17 +48,20 @@ class Level:
 
         # trees
         for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x * TS, obj.y * TS), obj.image, [self.all_sprites], obj.name)
+            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites, self.tree_sprites], obj.name)
 
-        # flora
+        # wildflowers
         for obj in tmx_data.get_layer_by_name('Decoration'):
-            Flora((obj.x * TS, obj.y * TS), obj.image, [self.all_sprites])
+            WildFlower((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites])
 
-        
+        # invisible collision tiles
+        for x, y, surf in tmx_data.get_layer_by_name('Collision').tiles():
+            BasicSprite((x * TS, y * TS), pg.Surface((TS, TS)), [self.collision_sprites])
 
-
-        # player
-        self.player = Player(START_POS, self.all_sprites)
+        # player - grouped into first (all_sprites) but needs collision_/tree_sprites for ref
+        for obj in tmx_data.get_layer_by_name('Player'):
+            if obj.name == 'Start':
+                self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.tree_sprites)
 
         # gui
         self.overlay = Overlay(self.player)
@@ -92,7 +97,8 @@ class CameraGroup(pg.sprite.Group):
         # draw the sprites in order of layer
         # no need to sort LAYERS.values() bc Python retains Dict insertion order
         for layer in LAYERS.values():
-            for sprite in self.sprites():
+            # sort by ascending y-value, drawing top to bottom for pseudo-3D overlap
+            for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
                 if sprite.z == layer:
                     offset_rect = sprite.rect.copy()
                     offset_rect.center -= self.offset

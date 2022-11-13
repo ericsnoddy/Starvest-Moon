@@ -2,9 +2,10 @@ RES = WIDTH, HEIGHT = 1280, 720
 TS = 64  # tilesize (px)
 FPS = 60
 
-# player
-START_POS = (640, 360)
+# player and interactables
 PLAYER_SPEED = 350
+PLAYER_HITBOX_SCALE = -126, -70
+TREE_HEALTH = 5
 
 # animation
 PLAYER_ANIM_RATE = 3
@@ -15,7 +16,7 @@ OVERLAY_POSITIONS = {
 	'tool' : (40, HEIGHT - 15), 
 	'seed': (70, HEIGHT - 5)}
 
-# These will be converted to pg.math.Vector2
+# business end of the tool relative to player's rect
 PLAYER_TOOL_OFFSET = {
 	'left': (-50,40),
 	'right': (50,40),
