@@ -22,6 +22,7 @@ class Level:
         self.sprite_setup()
         self.overlay = Overlay(self.player)  # gui
         self.transition = Transition(self.win, self.player, self.new_day)  # new day
+        self.soil_layer = SoilLayer(self.all_sprites)
 
 
     def sprite_setup(self):
