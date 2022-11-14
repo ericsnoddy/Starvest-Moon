@@ -1,10 +1,13 @@
+# std lib
+from random import choice
+
 # reqs
 import pygame as pg
 from pytmx.util_pygame import load_pygame
 
 # local
 from settings import *
-from support import import_folder_dict
+from support import import_folder, import_folder_dict
 
 
 class SoilTile(pg.sprite.Sprite):
@@ -15,16 +18,28 @@ class SoilTile(pg.sprite.Sprite):
         self.z = LAYERS['soil']
 
 
+
+class WaterTile(pg.sprite.Sprite):
+    def __init__(self, pos, surf, groups):
+        super().__init__(groups)
+        self.image = surf
+        self.image.set_alpha(125)
+        self.rect = self.image.get_rect(topleft = pos)
+        self.z = LAYERS['soil water']
+
+
+
 class SoilLayer:
     def __init__(self, all_sprites):
 
         # sprite groups
         self.all_sprites = all_sprites
         self.soil_sprites = pg.sprite.Group()
+        self.water_sprites = pg.sprite.Group()
 
         # graphics
-        self.soil_surf = pg.image.load('graphics/soil/o.png')
         self.soil_surfs = import_folder_dict('graphics/soil')
+        self.water_surfs = import_folder('graphics/soil_water')
 
         # build self.grid, a list with data for every tile
         self.create_soil_grid()
@@ -55,9 +70,9 @@ class SoilLayer:
                     self.hit_rects.append(pg.rect.Rect(col_index * TS, row_index * TS, TS, TS))
 
 
-    def get_hit(self, point):
+    def get_hit(self, target_pos):
         for rect in self.hit_rects:
-            if rect.collidepoint(point):
+            if rect.collidepoint(target_pos):
                 # convert to grid location
                 x = rect.x // TS
                 y = rect.y // TS
@@ -65,6 +80,26 @@ class SoilLayer:
                     self.grid[y][x].append('X')  # flag as soil patch - y,x ?
                     self.create_soil_tiles()
 
+
+    def water(self, target_pos):
+        for sprite in self.soil_sprites.sprites():
+            if sprite.rect.collidepoint(target_pos):
+                x = sprite.rect.x // TS
+                y = sprite.rect.y // TS
+                if not 'W' in self.grid[y][x]:
+                    self.grid[y][x].append('W')
+                    WaterTile(sprite.rect.topleft, choice(self.water_surfs), [self.all_sprites, self.water_sprites])
+
+
+    def absorb_water(self):
+        # destroy water sprites
+        for sprite in self.water_sprites.sprites():
+            sprite.kill()
+
+        # clean up grid
+        for row in self.grid:
+            for cell in row:
+                if 'W' in cell: cell.remove('W')
 
     def create_soil_tiles(self):
         self.soil_sprites.empty()  # populate from scratch because tiles will change
@@ -106,8 +141,6 @@ class SoilLayer:
                     if all((b, l, r)) and not t: tile_type = 'tm'
                     if all((t, l, r)) and not b: tile_type = 'bm'
 
-                    SoilTile(
-                        pos = (col_index * TS, row_index * TS), 
-                        surf = self.soil_surfs[tile_type], 
-                        groups = [self.all_sprites, self.soil_sprites]) 
+                    SoilTile((col_index * TS, row_index * TS), 
+                              self.soil_surfs[tile_type], [self.all_sprites, self.soil_sprites]) 
 

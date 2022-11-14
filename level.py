@@ -83,10 +83,7 @@ class Level:
             if obj.name == 'Bed':
                 InteractionSprite((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
 
-        # gui
         
-
-
     def new_day(self):
 
         # regrow apples
@@ -96,6 +93,9 @@ class Level:
             if not tree.dead:
                 tree.create_fruit()
                 tree.heal()
+
+        # absorb water
+        self.soil_layer.absorb_water()
 
 
     def inventory_add(self, item, amount=1):

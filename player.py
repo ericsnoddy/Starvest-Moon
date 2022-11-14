@@ -85,7 +85,7 @@ class Player(pg.sprite.Sprite):
 
         # watering
         elif self.selected_tool == 'water':
-            pass
+            self.soil_layer.water(self.target_pos)
 
 
     def get_target_pos(self):
