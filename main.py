@@ -1,7 +1,7 @@
 # std lib
 import sys
 
-# req
+# reqs
 import pygame as pg
 
 # local

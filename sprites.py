@@ -1,7 +1,7 @@
 # std lib
 from random import randint, choice
 
-# req
+# reqs
 import pygame as pg
 
 # local

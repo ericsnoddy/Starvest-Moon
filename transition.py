@@ -1,4 +1,4 @@
-# req
+# reqs
 import pygame as pg
 
 # local

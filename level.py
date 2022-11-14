@@ -1,4 +1,4 @@
-# req
+# reqs
 import pygame as pg
 from pytmx.util_pygame import load_pygame
 
@@ -9,6 +9,7 @@ from player import *
 from overlay import *
 from sprites import *
 from transition import *
+from soil import *
 
 
 class Level:
@@ -17,12 +18,13 @@ class Level:
         self.all_sprites = CameraGroup()
         self.collision_sprites = pg.sprite.Group()
         self.tree_sprites = pg.sprite.Group()
-        self.interaction_sprites = pg.sprite.Group()
-        self.setup()
-        self.transition = Transition(self.win, self.player, self.new_day)    
+        self.interaction_sprites = pg.sprite.Group()  # 'Bed' and 'Trader'
+        self.sprite_setup()
+        self.overlay = Overlay(self.player)  # gui
+        self.transition = Transition(self.win, self.player, self.new_day)  # new day
 
 
-    def setup(self):
+    def sprite_setup(self):
         # load tmx tilemap
         tmx_data = load_pygame('data/map.tmx')
 
@@ -80,7 +82,7 @@ class Level:
                 InteractionSprite((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
 
         # gui
-        self.overlay = Overlay(self.player)
+        
 
 
     def new_day(self):

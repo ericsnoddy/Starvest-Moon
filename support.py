@@ -1,7 +1,7 @@
 # std lib
 from os import walk
 
-# req
+# reqs
 import pygame as pg
 
 

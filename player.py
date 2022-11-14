@@ -1,7 +1,7 @@
 # std lib
 from collections import deque
 
-# req
+# reqs
 import pygame as pg
 from pygame.locals import *
 
