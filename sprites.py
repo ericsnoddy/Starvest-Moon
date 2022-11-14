@@ -1,7 +1,7 @@
 # std lib
 from random import randint, choice
 
-# pip install
+# req
 import pygame as pg
 
 # local
@@ -41,6 +41,13 @@ class AnimatedSprite(BasicSprite):
 
 
 
+class InteractionSprite(BasicSprite):
+    def __init__(self, pos, size, groups, name):
+        super().__init__(pos, pg.Surface(size), groups)
+        self.name = name
+
+
+
 class WildFlower(BasicSprite):
     def __init__(self, pos, surf, groups):
         super().__init__(pos, surf, groups)
@@ -48,13 +55,35 @@ class WildFlower(BasicSprite):
 
 
 
+class Particle(BasicSprite):
+    def __init__(self, pos, surf, groups, z=LAYERS['main'], duration=200):
+        super().__init__(pos, surf, groups, z)
+        self.start = pg.time.get_ticks()
+        self.duration = duration
+
+        # create a white mask (to "flash")
+        mask_surf = pg.mask.from_surface(self.image)
+        new_surf = mask_surf.to_surface()
+        # now we have mask with transparent px black, all other px white
+        new_surf.set_colorkey((0, 0, 0))  # set black as the transparency
+        self.image = new_surf
+
+
+    def update(self, dt):
+        now = pg.time.get_ticks()
+        if now - self.start > self.duration:
+            self.kill()
+        
+        
+
 class Tree(BasicSprite):
-    def __init__(self, pos, surf, groups, name):
+    def __init__(self, pos, surf, groups, name, add_func):
         super().__init__(pos, surf, groups)
 
         # tree attrs
-        self.health = TREE_HEALTH
-        self.dead = False
+        self.name = name
+        self.start_health = self.health = int(f"{TREE_HEALTH_SM if name == 'Small' else TREE_HEALTH_LG}")
+        self.dead = False        
         self.stump_surf = pg.image.load(f"graphics/stumps/{'small' if name == 'Small' else 'large'}.png")
         self.invul_timer = Timer(200)
 
@@ -64,24 +93,41 @@ class Tree(BasicSprite):
         self.apple_sprites = pg.sprite.Group()
         self.create_fruit()
 
+        # harvest
+        self.inventory_add = add_func
+
+        # note: self.groups()[0] will be a reference to level.all_sprites
+        # (sprite.groups() returns list of groups the sprite belongs to, in order of insertion)
+        # this is a clever workaround for not having direct access to that group
 
     def update(self, dt):
         if not self.dead: 
             self.check_death()
 
+
+    def heal(self):
+        # trees can heal above their starting health depending on TREE_HEAL constant
+        if self.health < self.start_health:
+            self.health += TREE_HEAL
+
     def damage(self):
         self.health -= 1
+        # remove an apple
         if len(self.apple_sprites.sprites()) > 0:
             random_apple = choice(self.apple_sprites.sprites())
+            Particle(random_apple.rect.topleft, random_apple.image, self.groups()[0], LAYERS['fruit'])
             random_apple.kill()
+            self.inventory_add('apple')
 
 
     def check_death(self):
         if self.health <= 0:
+            Particle(self.rect.topleft, self.image, self.groups()[0], duration=250)
             self.image = self.stump_surf
             self.rect = self.image.get_rect(midbottom = self.rect.midbottom)
             self.hitbox = self.rect.copy().inflate(-10,  -self.rect.height * 0.6)
             self.dead = True
+            self.inventory_add('wood', int(f"{2 if self.name == 'Small' else 3}"))
 
     
     def create_fruit(self):
@@ -89,8 +135,6 @@ class Tree(BasicSprite):
             if randint(0, 10) < 2:
                 BasicSprite(
                     pos=(apple_pos[0] + self.rect.left, apple_pos[1] + self.rect.top), # apple_pos is relative to the screen position
-                    surf=self.apple_surf,
-                    # self.groups() is a clever pg.sprite.Group method to get access to level.all_sprites
-                    # it returns a list of all groups the Tree obj belongs to, in order of insertion
+                    surf=self.apple_surf,                    
                     groups=[self.apple_sprites, self.groups()[0]], 
                     z=LAYERS['fruit'])

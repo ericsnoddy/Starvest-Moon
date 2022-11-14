@@ -1,12 +1,12 @@
 # std lib
 from os import walk
 
-# pip install
+# req
 import pygame as pg
+
 
 def import_folder(path):
     surf_list = []
-
     for _, __, img_files in walk(path):
         for img in img_files:
             full_path = path + '/' + img

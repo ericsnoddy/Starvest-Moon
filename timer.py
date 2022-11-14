@@ -1,4 +1,4 @@
-# pip install
+# req
 import pygame as pg
 
 class Timer:

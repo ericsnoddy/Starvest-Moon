@@ -1,7 +1,7 @@
 # std lib
 import sys
 
-# pip install
+# req
 import pygame as pg
 
 # local
@@ -13,15 +13,21 @@ class Game:
         pg.init()
         self.win = pg.display.set_mode((RES))
         self.clock = pg.time.Clock()
-        self.dt = 1 # init
+        self.dt = 1 # init delta_time (for calculating framerate-independent timing)
         self.level = Level()
 
 
     def run(self):
         while True:
             self.level.run(self.dt)
-            self.check_events()
             self.update()
+            self.check_events()
+            
+
+    def update(self):
+        self.dt = self.clock.tick(FPS) / 1000
+        pg.display.set_caption(f'{self.clock.get_fps() :.1f}')  #  caption the framerate
+        pg.display.flip()
 
 
     def check_events(self):
@@ -29,12 +35,6 @@ class Game:
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 pg.quit()
                 sys.exit()
-
-
-    def update(self):
-        self.dt = self.clock.tick(FPS) / 1000
-        pg.display.set_caption(f'{self.clock.get_fps() :.1f}')
-        pg.display.flip()
 
 
 if __name__ == '__main__':

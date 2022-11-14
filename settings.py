@@ -5,7 +5,9 @@ FPS = 60
 # player and interactables
 PLAYER_SPEED = 350
 PLAYER_HITBOX_SCALE = -126, -70
-TREE_HEALTH = 5
+TREE_HEALTH_SM = 4
+TREE_HEALTH_LG = 6
+TREE_HEAL = 3
 
 # animation
 PLAYER_ANIM_RATE = 3
@@ -15,6 +17,9 @@ ANIM_RATE = 5
 OVERLAY_POSITIONS = {
 	'tool' : (40, HEIGHT - 15), 
 	'seed': (70, HEIGHT - 5)}
+
+# transitions
+TRANSITION_SPEED = -2
 
 # business end of the tool relative to player's rect
 PLAYER_TOOL_OFFSET = {

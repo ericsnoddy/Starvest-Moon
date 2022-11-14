@@ -1,7 +1,7 @@
 # std lib
 from collections import deque
 
-# pip install
+# req
 import pygame as pg
 from pygame.locals import *
 
@@ -12,11 +12,12 @@ from timer import Timer
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites):
+    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprites):
         super().__init__(group)  # auto-adds class instance to sprite group   
         self.animations = {}
         self._import_assets()
         self.status = 'down_idle'
+        self.sleep = False
         self.frame_index = 0  # animation frame
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center = pos)
@@ -47,8 +48,17 @@ class Player(pg.sprite.Sprite):
         self.seeds = deque(['corn', 'tomato'])
         self.selected_seed = self.seeds[0]
 
+        # inventory
+        self.item_inventory = {
+            'wood': 0,
+            'apple': 0,
+            'corn': 0,
+            'tomato': 0
+        }
+
         # interaction
         self.tree_sprites = tree_sprites
+        self.interaction_sprites = interaction_sprites
 
 
     def update(self, dt):
@@ -61,13 +71,18 @@ class Player(pg.sprite.Sprite):
         
 
     def use_tool(self):
+
+        # soil
         if self.selected_tool == 'hoe':
             pass
+
+        # trees
         elif self.selected_tool == 'axe':
             for tree in self.tree_sprites.sprites():
                 if tree.rect.collidepoint(self.target_pos):
                     tree.damage()
 
+        # watering
         elif self.selected_tool == 'water':
             pass
 
@@ -75,18 +90,21 @@ class Player(pg.sprite.Sprite):
     def get_target_pos(self):
         offset_vector = pg.math.Vector2(PLAYER_TOOL_OFFSET[self.status.split('_')[0]])
         self.target_pos = self.rect.center + offset_vector
-        print(self.target_pos)
 
 
     def use_seed(self):
-        print(f'Using {self.selected_seed}')
+        pass
+
+
+    def trade(self):
+        pass
 
 
     def input(self):
         keys = pg.key.get_pressed()
 
         # do not accept key input while using tool
-        if not self.timers['tool use'].active:
+        if not self.timers['tool use'].active and not self.sleep:
             # x-direction
             if keys[K_a]:
                 self.direction.x = -1
@@ -140,6 +158,19 @@ class Player(pg.sprite.Sprite):
                     self.timers['seed change'].activate()
                     self.seeds.rotate(1)
                     self.selected_seed = self.seeds[0]
+
+            # misc interaction
+            # new day (bed)
+            if keys[K_RETURN]:
+                # this is the old way to do it
+                # interaction_point = [zone for zone in self.interaction_sprites.sprites() if zone.rect.collidepoint(self.rect)]
+                interaction_point = pg.sprite.spritecollide(self, self.interaction_sprites, False)
+                if interaction_point:
+                    if interaction_point[0].name == 'Trader':
+                        self.trade()
+                    else:  # name = 'Bed'
+                        self.status = 'left_idle'
+                        self.sleep = True  # flag that triggers new day
 
     
     def collision_check(self, direction):

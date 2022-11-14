@@ -1,13 +1,14 @@
-# pip install
+# req
 import pygame as pg
 from pytmx.util_pygame import load_pygame
 
 # local
 from settings import *
 from support import import_folder
-from player import Player
-from overlay import Overlay
+from player import *
+from overlay import *
 from sprites import *
+from transition import *
 
 
 class Level:
@@ -16,7 +17,9 @@ class Level:
         self.all_sprites = CameraGroup()
         self.collision_sprites = pg.sprite.Group()
         self.tree_sprites = pg.sprite.Group()
-        self.setup()        
+        self.interaction_sprites = pg.sprite.Group()
+        self.setup()
+        self.transition = Transition(self.win, self.player, self.new_day)    
 
 
     def setup(self):
@@ -48,7 +51,12 @@ class Level:
 
         # trees
         for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites, self.tree_sprites], obj.name)
+            Tree(
+                pos = (obj.x, obj.y), 
+                surf = obj.image, 
+                groups = [self.all_sprites, self.collision_sprites, self.tree_sprites], 
+                name = obj.name,
+                add_func = self.inventory_add)
 
         # wildflowers
         for obj in tmx_data.get_layer_by_name('Decoration'):
@@ -61,10 +69,34 @@ class Level:
         # player - grouped into first (all_sprites) but needs collision_/tree_sprites for ref
         for obj in tmx_data.get_layer_by_name('Player'):
             if obj.name == 'Start':
-                self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.tree_sprites)
+                self.player = Player(
+                    pos = (obj.x, obj.y), 
+                    group = self.all_sprites, 
+                    collision_sprites = self.collision_sprites, 
+                    tree_sprites = self.tree_sprites, 
+                    interaction_sprites = self.interaction_sprites)
+
+            if obj.name == 'Bed':
+                InteractionSprite((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
 
         # gui
         self.overlay = Overlay(self.player)
+
+
+    def new_day(self):
+
+        # regrow apples
+        for tree in self.tree_sprites.sprites():
+            for apple in tree.apple_sprites.sprites():
+                apple.kill()
+            if not tree.dead:
+                tree.create_fruit()
+                tree.heal()
+
+
+    def inventory_add(self, item, amount=1):
+        # this is a method we'll pass to harvestable objects
+        self.player.item_inventory[item] += amount
 
 
     def update(self, dt):
@@ -81,6 +113,9 @@ class Level:
         self.update(dt)
         self.draw()
 
+        if self.player.sleep:
+            self.transition.sleep(dt)  # calls self.new_day()
+
 
 
 class CameraGroup(pg.sprite.Group):
@@ -94,7 +129,7 @@ class CameraGroup(pg.sprite.Group):
         self.offset.x = player.rect.centerx - WIDTH / 2
         self.offset.y = player.rect.centery - HEIGHT / 2
 
-        # draw the sprites in order of layer
+        # draw the sprites in order of layer first, y-value 2nd
         # no need to sort LAYERS.values() bc Python retains Dict insertion order
         for layer in LAYERS.values():
             # sort by ascending y-value, drawing top to bottom for pseudo-3D overlap
