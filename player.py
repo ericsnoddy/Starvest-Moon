@@ -12,7 +12,7 @@ from timer import Timer
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprites):
+    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprites, soil_layer):
         super().__init__(group)  # auto-adds class instance to sprite group   
         self.animations = {}
         self._import_assets()
@@ -59,6 +59,7 @@ class Player(pg.sprite.Sprite):
         # interaction
         self.tree_sprites = tree_sprites
         self.interaction_sprites = interaction_sprites
+        self.soil_layer = soil_layer
 
 
     def update(self, dt):
@@ -74,7 +75,7 @@ class Player(pg.sprite.Sprite):
 
         # soil
         if self.selected_tool == 'hoe':
-            pass
+            self.soil_layer.get_hit(self.target_pos)
 
         # trees
         elif self.selected_tool == 'axe':
@@ -135,11 +136,11 @@ class Player(pg.sprite.Sprite):
             if not self.timers['tool change'].active:
                 if keys[K_LEFT]:
                     self.timers['tool change'].activate()
-                    self.tools.rotate(-1)
+                    self.tools.rotate(1)
                     self.selected_tool = self.tools[0]
                 elif keys[K_RIGHT]:
                     self.timers['tool change'].activate()
-                    self.tools.rotate(1)
+                    self.tools.rotate(-1)
                     self.selected_tool = self.tools[0]
 
             # seed use

@@ -19,11 +19,11 @@ class Level:
         self.collision_sprites = pg.sprite.Group()
         self.tree_sprites = pg.sprite.Group()
         self.interaction_sprites = pg.sprite.Group()  # 'Bed' and 'Trader'
+        self.soil_layer = SoilLayer(self.all_sprites)  # reqd by sprite_setup()
         self.sprite_setup()
         self.overlay = Overlay(self.player)  # gui
         self.transition = Transition(self.win, self.player, self.new_day)  # new day
-        self.soil_layer = SoilLayer(self.all_sprites)
-
+        
 
     def sprite_setup(self):
         # load tmx tilemap
@@ -77,7 +77,8 @@ class Level:
                     group = self.all_sprites, 
                     collision_sprites = self.collision_sprites, 
                     tree_sprites = self.tree_sprites, 
-                    interaction_sprites = self.interaction_sprites)
+                    interaction_sprites = self.interaction_sprites,
+                    soil_layer = self.soil_layer)
 
             if obj.name == 'Bed':
                 InteractionSprite((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
