@@ -5,6 +5,7 @@ FPS = 60
 # player and interactables
 PLAYER_SPEED = 350
 PLAYER_HITBOX_SCALE = -126, -70
+START_MONEY = 200
 TREE_HEALTH_SM = 4
 TREE_HEALTH_LG = 6
 TREE_HEAL = 3
@@ -18,6 +19,11 @@ RAIN_CHANCE = 100
 OVERLAY_POSITIONS = {
 	'tool' : (40, HEIGHT - 15), 
 	'seed': (70, HEIGHT - 5)}
+
+# menu
+MENU_WIDTH = 400
+MENU_SPACE = 10
+MENU_PADDING = 8
 
 # transitions
 TRANSITION_SPEED = -5  # lower number -> faster transition

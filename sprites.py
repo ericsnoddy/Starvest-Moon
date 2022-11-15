@@ -41,7 +41,7 @@ class AnimatedSprite(BasicSprite):
 
 
 
-class InteractionSprite(BasicSprite):
+class Interaction(BasicSprite):
     def __init__(self, pos, size, groups, name):
         super().__init__(pos, pg.Surface(size), groups)
         self.name = name

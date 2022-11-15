@@ -14,6 +14,7 @@ from sprites import *
 from transition import *
 from soil import SoilLayer
 from sky import Rain, Sky
+from menu import *
 
 
 class Level:
@@ -30,6 +31,9 @@ class Level:
         self.rain = Rain(self.all_sprites)
         self.raining = self.soil_layer.raining = randint(0, 100) < RAIN_CHANCE
         self.sky = Sky()
+        self.menu = Menu(self.player, self.toggle_shop)
+        self.shop_active = False
+
 
     def sprite_setup(self):
         # load tmx tilemap
@@ -77,6 +81,7 @@ class Level:
 
         # player - grouped into first (all_sprites) but needs collision_/tree_sprites for ref
         for obj in tmx_data.get_layer_by_name('Player'):
+
             if obj.name == 'Start':
                 self.player = Player(
                     pos = (obj.x, obj.y), 
@@ -84,10 +89,14 @@ class Level:
                     collision_sprites = self.collision_sprites, 
                     tree_sprites = self.tree_sprites, 
                     interaction_sprites = self.interaction_sprites,
-                    soil_layer = self.soil_layer)
+                    soil_layer = self.soil_layer,
+                    toggle_shop_func = self.toggle_shop)
 
             if obj.name == 'Bed':
-                InteractionSprite((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
+                Interaction((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
+
+            if obj.name == 'Trader':
+                Interaction((obj.x, obj.y), (obj.width, obj.height), self.interaction_sprites, obj.name)
 
         
     def new_day(self):
@@ -130,32 +139,40 @@ class Level:
         self.player.item_inventory[item] += amount
 
 
-    def update(self, dt):
-        self.all_sprites.update(dt)
-
-        # environment
-        if self.raining:
-            self.rain.update()
-        self.sky.update(dt)
-
-        self.plant_collision()
-
-
-    def draw(self):
-        self.win.fill('black')
-        self.all_sprites.draw(self.win, self.player)
-
-        # daylight transition
-        self.sky.draw(self.win)
-
-        # gui
-        self.overlay.draw(self.win)
+    def toggle_shop(self):
+        self.shop_active = not self.shop_active
 
 
     def run(self, dt):
-        self.update(dt)
-        self.draw()
 
+        # group draw
+        self.win.fill('black')
+        self.all_sprites.draw(self.win, self.player)
+
+        # overriding menu - trade
+        if self.shop_active:
+            self.menu.draw(self.win)
+            self.menu.input()
+
+        else:
+            # update
+            self.all_sprites.update(dt)
+
+            # check plant collision
+            self.plant_collision()
+
+            # display gui
+            self.overlay.draw(self.win) 
+
+            # display rain
+            if self.raining:
+                self.rain.update()
+
+            # daylight transition
+            self.sky.update(dt)
+            self.sky.draw(self.win)
+
+        # new day transition
         if self.player.sleep:
             self.transition.sleep(dt)  # calls self.new_day()
 

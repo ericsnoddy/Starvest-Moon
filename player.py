@@ -12,12 +12,11 @@ from timer import Timer
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprites, soil_layer):
+    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction_sprites, soil_layer, toggle_shop_func):
         super().__init__(group)  # auto-adds class instance to sprite group   
         self.animations = {}
         self._import_assets()
         self.status = 'down_idle'
-        self.sleep = False
         self.frame_index = 0  # animation frame
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center = pos)
@@ -49,17 +48,25 @@ class Player(pg.sprite.Sprite):
         self.selected_seed = self.seeds[0]
 
         # inventory
+        self.bank_balance = START_MONEY
         self.item_inventory = {
             'wood': 0,
             'apple': 0,
             'corn': 0,
             'tomato': 0
         }
+        self.seed_inventory = {
+            'corn': 5,
+            'tomato': 3
+        }
+        
 
         # interaction
+        self.sleep = False
         self.tree_sprites = tree_sprites
         self.interaction_sprites = interaction_sprites
         self.soil_layer = soil_layer
+        self.toggle_shop = toggle_shop_func
 
 
     def update(self, dt):
@@ -94,11 +101,9 @@ class Player(pg.sprite.Sprite):
 
 
     def use_seed(self):
-        self.soil_layer.plant_seed(self.target_pos, self.selected_seed)
-
-
-    def trade(self):
-        pass
+        if self.seed_inventory[self.selected_seed] > 0:
+            self.soil_layer.plant_seed(self.target_pos, self.selected_seed)
+            self.seed_inventory[self.selected_seed] -= 1
 
 
     def input(self):
@@ -168,7 +173,8 @@ class Player(pg.sprite.Sprite):
                 interaction_point = pg.sprite.spritecollide(self, self.interaction_sprites, False)
                 if interaction_point:
                     if interaction_point[0].name == 'Trader':
-                        self.trade()
+                        self.toggle_shop()
+
                     else:  # name = 'Bed'
                         self.status = 'left_idle'
                         self.sleep = True  # flag that triggers new day
