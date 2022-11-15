@@ -20,7 +20,8 @@ OVERLAY_POSITIONS = {
 	'seed': (70, HEIGHT - 5)}
 
 # transitions
-TRANSITION_SPEED = -5
+TRANSITION_SPEED = -5  # lower number -> faster transition
+DAYLIGHT_SAVINGS_RATE = 2  # lower number -> slower day
 
 # business end of the tool relative to player's rect
 PLAYER_TOOL_OFFSET = {

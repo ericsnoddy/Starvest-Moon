@@ -13,7 +13,7 @@ from overlay import *
 from sprites import *
 from transition import *
 from soil import SoilLayer
-from sky import Rain
+from sky import Rain, Sky
 
 
 class Level:
@@ -28,9 +28,8 @@ class Level:
         self.overlay = Overlay(self.player)  # gui
         self.transition = Transition(self.win, self.player, self.new_day)  # new day
         self.rain = Rain(self.all_sprites)
-        self.raining = randint(0, 100) < RAIN_CHANCE
-        self.soil_layer.raining = self.raining
-        
+        self.raining = self.soil_layer.raining = randint(0, 100) < RAIN_CHANCE
+        self.sky = Sky()
 
     def sprite_setup(self):
         # load tmx tilemap
@@ -112,6 +111,9 @@ class Level:
         if self.soil_layer.raining:
             self.soil_layer.water_all()
 
+        # daylight
+        self.sky.start_color = [255] * 3
+
 
     def plant_collision(self):
         if self.soil_layer.plant_sprites:
@@ -130,14 +132,23 @@ class Level:
 
     def update(self, dt):
         self.all_sprites.update(dt)
+
+        # environment
         if self.raining:
             self.rain.update()
+        self.sky.update(dt)
+
         self.plant_collision()
 
 
     def draw(self):
         self.win.fill('black')
         self.all_sprites.draw(self.win, self.player)
+
+        # daylight transition
+        self.sky.draw(self.win)
+
+        # gui
         self.overlay.draw(self.win)
 
 

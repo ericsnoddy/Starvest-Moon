@@ -10,6 +10,25 @@ from support import import_folder
 from sprites import *
 
 
+class Sky:
+    def __init__(self):
+        self.full_surf = pg.Surface((RES))
+        self.start_color = [255, 255, 255]
+        self.end_color = [38, 101, 189]
+
+
+    def update(self, dt):
+        for incr, value in enumerate(self.end_color):
+            if self.start_color[incr] > value:
+                self.start_color[incr] -= DAYLIGHT_SAVINGS_RATE * dt
+
+
+    def draw(self, win):
+        self.full_surf.fill(self.start_color)
+        win.blit(self.full_surf, (0,0), special_flags = pg.BLEND_RGB_MULT)
+
+
+
 class Drop(BasicSprite):
     def __init__(self, pos, surf, groups, z, moving):
         super().__init__(pos, surf, groups, z)
