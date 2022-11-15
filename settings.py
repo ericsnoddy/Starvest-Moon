@@ -12,6 +12,7 @@ TREE_HEAL = 3
 # animation
 PLAYER_ANIM_RATE = 3
 ANIM_RATE = 5
+RAIN_CHANCE = 30
 
 # overlay positions 
 OVERLAY_POSITIONS = {

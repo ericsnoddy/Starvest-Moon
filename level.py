@@ -1,3 +1,6 @@
+# std lib
+from random import randint
+
 # reqs
 import pygame as pg
 from pytmx.util_pygame import load_pygame
@@ -9,7 +12,8 @@ from player import *
 from overlay import *
 from sprites import *
 from transition import *
-from soil import *
+from soil import SoilLayer
+from sky import Rain
 
 
 class Level:
@@ -23,6 +27,9 @@ class Level:
         self.sprite_setup()
         self.overlay = Overlay(self.player)  # gui
         self.transition = Transition(self.win, self.player, self.new_day)  # new day
+        self.rain = Rain(self.all_sprites)
+        self.raining = randint(0, 100) < RAIN_CHANCE
+        self.soil_layer.raining = self.raining
         
 
     def sprite_setup(self):
@@ -97,6 +104,11 @@ class Level:
         # absorb water
         self.soil_layer.absorb_water()
 
+        # chance of rain
+        self.soil_layer.raining = self.raining
+        if self.raining:
+            self.soil_layer.water_all()
+
 
     def inventory_add(self, item, amount=1):
         # this is a method we'll pass to harvestable objects
@@ -105,6 +117,8 @@ class Level:
 
     def update(self, dt):
         self.all_sprites.update(dt)
+        if self.raining:
+            self.rain.update()
 
 
     def draw(self):

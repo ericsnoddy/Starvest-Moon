@@ -79,6 +79,8 @@ class SoilLayer:
                 if 'F' in self.grid[y][x]:
                     self.grid[y][x].append('X')  # flag as soil patch - y,x ?
                     self.create_soil_tiles()
+                    if self.raining:
+                        self.water_all()
 
 
     def water(self, target_pos):
@@ -89,6 +91,14 @@ class SoilLayer:
                 if not 'W' in self.grid[y][x]:
                     self.grid[y][x].append('W')
                     WaterTile(sprite.rect.topleft, choice(self.water_surfs), [self.all_sprites, self.water_sprites])
+
+
+    def water_all(self):
+        for row_index, row in enumerate(self.grid):
+            for col_index, cell in enumerate(row):
+                if 'X' in cell and 'W' not in cell:
+                    cell.append('W')
+                    WaterTile((col_index * TS, row_index * TS), choice(self.water_surfs), [self.all_sprites, self.water_sprites])
 
 
     def absorb_water(self):
