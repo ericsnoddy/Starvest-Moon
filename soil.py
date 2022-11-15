@@ -29,13 +29,53 @@ class WaterTile(pg.sprite.Sprite):
 
 
 
+class Plant(pg.sprite.Sprite):
+    def __init__(self, plant, groups, soil, is_watered):
+        super().__init__(groups)
+        self.plant = plant
+        self.soil = soil
+        self.frames = import_folder(f'graphics/plants/{self.plant}/')
+        self.age = 0
+        self.max_age = len(self.frames) - 1
+        self.grow_speed = GROW_SPEED[self.plant]
+        
+        # sprite setup
+        self.image = self.frames[self.age]
+        self.y_off = -16 if plant == 'corn' else -8
+        self.rect = self.image.get_rect(midbottom = self.soil.rect.midbottom + pg.math.Vector2(0, self.y_off))
+        self.z = LAYERS['ground plant']
+
+        # Boolean method
+        self.is_watered = is_watered
+        self.harvestable = False
+
+    
+    def grow(self):
+        if self.is_watered(self.rect.center):
+            self.age += self.grow_speed
+
+            # plant becomes obstacle
+            if int(self.age) > 0:
+                self.z = LAYERS['main']
+                self.hitbox = self.rect.copy().inflate(-26, -self.rect.height * 0.4)
+
+            # ripen
+            if self.age >= self.max_age:
+                self.age = self.max_age  # avoid index error
+                self.harvestable = True
+            self.image = self.frames[int(self.age)]
+            self.rect = self.image.get_rect(midbottom = self.soil.rect.midbottom + pg.math.Vector2(0, self.y_off))
+
+
 class SoilLayer:
-    def __init__(self, all_sprites):
+    def __init__(self, all_sprites, collision_sprites):
 
         # sprite groups
         self.all_sprites = all_sprites
+        self.collision_sprites = collision_sprites
         self.soil_sprites = pg.sprite.Group()
         self.water_sprites = pg.sprite.Group()
+        self.plant_sprites = pg.sprite.Group()
 
         # graphics
         self.soil_surfs = import_folder_dict('graphics/soil')
@@ -44,6 +84,9 @@ class SoilLayer:
         # build self.grid, a list with data for every tile
         self.create_soil_grid()
         self.create_hit_rects()
+
+        # updated by Level()
+        self.raining = False
     
 
     def create_soil_grid(self):
@@ -68,6 +111,10 @@ class SoilLayer:
                 # append a rect to every tile that is farmable
                 if 'F' in cell:
                     self.hit_rects.append(pg.rect.Rect(col_index * TS, row_index * TS, TS, TS))
+
+
+    def update_plants(self):
+        [plant.grow() for plant in self.plant_sprites.sprites()]
 
 
     def get_hit(self, target_pos):
@@ -101,6 +148,14 @@ class SoilLayer:
                     WaterTile((col_index * TS, row_index * TS), choice(self.water_surfs), [self.all_sprites, self.water_sprites])
 
 
+    def plant_seed(self, target_pos, seed):
+        for sprite in self.soil_sprites.sprites():
+            if sprite.rect.collidepoint(target_pos):
+                x, y = sprite.rect.x, sprite.rect.y
+                self.grid[y // TS][x // TS].append('P')
+                Plant(seed, [self.all_sprites, self.plant_sprites, self.collision_sprites], sprite, self.is_watered)
+
+
     def absorb_water(self):
         # destroy water sprites
         for sprite in self.water_sprites.sprites():
@@ -110,6 +165,12 @@ class SoilLayer:
         for row in self.grid:
             for cell in row:
                 if 'W' in cell: cell.remove('W')
+
+
+    def is_watered(self, pos):
+        cell = self.grid[pos[1] // TS][pos[0] // TS]
+        return True if 'W' in cell else False
+
 
     def create_soil_tiles(self):
         self.soil_sprites.empty()  # populate from scratch because tiles will change

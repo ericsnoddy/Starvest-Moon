@@ -23,7 +23,7 @@ class Level:
         self.collision_sprites = pg.sprite.Group()
         self.tree_sprites = pg.sprite.Group()
         self.interaction_sprites = pg.sprite.Group()  # 'Bed' and 'Trader'
-        self.soil_layer = SoilLayer(self.all_sprites)  # reqd by sprite_setup()
+        self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites)  # reqd by sprite_setup()
         self.sprite_setup()
         self.overlay = Overlay(self.player)  # gui
         self.transition = Transition(self.win, self.player, self.new_day)  # new day
@@ -93,6 +93,9 @@ class Level:
         
     def new_day(self):
 
+        # grow plants
+        self.soil_layer.update_plants()
+
         # regrow apples
         for tree in self.tree_sprites.sprites():
             for apple in tree.apple_sprites.sprites():
@@ -105,10 +108,20 @@ class Level:
         self.soil_layer.absorb_water()
 
         # chance of rain
-        self.soil_layer.raining = self.raining
-        if self.raining:
+        self.raining = self.soil_layer.raining = randint(1, 100) < RAIN_CHANCE
+        if self.soil_layer.raining:
             self.soil_layer.water_all()
 
+
+    def plant_collision(self):
+        if self.soil_layer.plant_sprites:
+            for plant in self.soil_layer.plant_sprites.sprites():
+                if plant.harvestable and plant.rect.colliderect(self.player.hitbox):
+                    self.inventory_add(plant.plant)
+                    self.soil_layer.grid[plant.rect.centery // TS][plant.rect.centerx // TS].remove('P')
+                    plant.kill()
+                    Particle((plant.rect.x, plant.rect.y), plant.image, self.all_sprites)
+                    
 
     def inventory_add(self, item, amount=1):
         # this is a method we'll pass to harvestable objects
@@ -119,6 +132,7 @@ class Level:
         self.all_sprites.update(dt)
         if self.raining:
             self.rain.update()
+        self.plant_collision()
 
 
     def draw(self):

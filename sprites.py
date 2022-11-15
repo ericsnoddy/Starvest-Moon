@@ -88,7 +88,7 @@ class Tree(BasicSprite):
         self.invul_timer = Timer(200)
 
         # apples
-        self.apple_surf = pg.image.load('graphics/fruit/apple.png').convert_alpha()
+        self.apple_surf = pg.image.load('graphics/plants/apple.png').convert_alpha()
         self.apple_pos_list = APPLE_POS[name]
         self.apple_sprites = pg.sprite.Group()
         self.create_fruit()

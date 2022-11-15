@@ -41,7 +41,7 @@ class Player(pg.sprite.Sprite):
         }
 
         # tools
-        self.tools = deque(['axe', 'hoe', 'water'])
+        self.tools = deque(['hoe', 'axe', 'water'])
         self.selected_tool = self.tools[0]
 
         # seeds
@@ -94,7 +94,7 @@ class Player(pg.sprite.Sprite):
 
 
     def use_seed(self):
-        pass
+        self.soil_layer.plant_seed(self.target_pos, self.selected_seed)
 
 
     def trade(self):
@@ -229,10 +229,10 @@ class Player(pg.sprite.Sprite):
 
     def animate(self, dt):
         self.frame_index += PLAYER_ANIM_RATE * dt  # fractionally increase frame_index (FPS independent) as timer
-        self.frame_index %= len(self.animations[self.status])
-
         # if self.frame_index >= len(self.animations[self.status]):
         #     self.frame_index = 0
+        self.frame_index %= len(self.animations[self.status])
+        
         self.image = self.animations[self.status][int(self.frame_index)]  # index gradually increases until next int
     
     #

@@ -23,6 +23,7 @@ class Drop(BasicSprite):
 
 
     def update(self, dt):
+        # update gets called by Group()
         if self.moving:
             speed_dt = self.direction * self.speed * dt
             self.pos += speed_dt

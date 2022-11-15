@@ -12,7 +12,7 @@ TREE_HEAL = 3
 # animation
 PLAYER_ANIM_RATE = 3
 ANIM_RATE = 5
-RAIN_CHANCE = 30
+RAIN_CHANCE = 100
 
 # overlay positions 
 OVERLAY_POSITIONS = {
@@ -20,7 +20,7 @@ OVERLAY_POSITIONS = {
 	'seed': (70, HEIGHT - 5)}
 
 # transitions
-TRANSITION_SPEED = -2
+TRANSITION_SPEED = -5
 
 # business end of the tool relative to player's rect
 PLAYER_TOOL_OFFSET = {
