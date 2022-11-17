@@ -11,9 +11,10 @@ from level import Level
 class Game:
     def __init__(self):
         pg.init()
+        pg.mixer.init()
         self.win = pg.display.set_mode((RES))
         self.clock = pg.time.Clock()
-        self.dt = 1 # init delta_time (for calculating framerate-independent timing)
+        self.dt = 1 # init delta_time
         self.level = Level()
 
 
@@ -32,7 +33,7 @@ class Game:
 
     def check_events(self):
         for event in pg.event.get():
-            if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
+            if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
 

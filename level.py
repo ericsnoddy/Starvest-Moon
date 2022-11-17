@@ -33,6 +33,12 @@ class Level:
         self.sky = Sky()
         self.menu = Menu(self.player, self.toggle_shop)
         self.shop_active = False
+        # sound
+        self.success_sound = pg.mixer.Sound('audio/success.wav')
+        self.success_sound.set_volume(0.2)
+        self.bg_music = pg.mixer.Sound('audio/music.mp3')
+        self.bg_music.set_volume(0.1)
+        self.bg_music.play(-1)
 
 
     def sprite_setup(self):
@@ -58,9 +64,8 @@ class Level:
             BasicSprite((x * TS, y * TS), surf, [self.all_sprites, self.collision_sprites])
 
         # water
-        water_frames = import_folder('graphics/water')
         for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
-            AnimatedSprite((x * TS, y * TS), water_frames, [self.all_sprites])
+            AnimatedSprite((x * TS, y * TS), import_folder('graphics/water'), [self.all_sprites])
 
         # trees
         for obj in tmx_data.get_layer_by_name('Trees'):
@@ -137,6 +142,7 @@ class Level:
     def inventory_add(self, item, amount=1):
         # this is a method we'll pass to harvestable objects
         self.player.item_inventory[item] += amount
+        self.success_sound.play()
 
 
     def toggle_shop(self):
@@ -161,9 +167,6 @@ class Level:
             # check plant collision
             self.plant_collision()
 
-            # display gui
-            self.overlay.draw(self.win) 
-
             # display rain
             if self.raining:
                 self.rain.update()
@@ -172,9 +175,12 @@ class Level:
             self.sky.update(dt)
             self.sky.draw(self.win)
 
+        # display gui
+        self.overlay.draw(self.win) 
+
         # new day transition
         if self.player.sleep:
-            self.transition.sleep(dt)  # calls self.new_day()
+            self.transition.sleep(dt)  # calls level.new_day()
 
 
 

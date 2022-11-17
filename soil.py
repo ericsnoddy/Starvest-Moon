@@ -87,7 +87,12 @@ class SoilLayer:
 
         # updated by Level()
         self.raining = False
-    
+
+        # sound
+        self.hoe_sound = pg.mixer.Sound('audio/hoe.wav')
+        self.hoe_sound.set_volume(0.2)
+        self.plant_sound = pg.mixer.Sound('audio/plant.wav')
+        self.plant_sound.set_volume(0.2)
 
     def create_soil_grid(self):
         # list for every tile holding data about the tile
@@ -120,6 +125,9 @@ class SoilLayer:
     def get_hit(self, target_pos):
         for rect in self.hit_rects:
             if rect.collidepoint(target_pos):
+                # play sound
+                self.hoe_sound.play()
+
                 # convert to grid location
                 x = rect.x // TS
                 y = rect.y // TS
@@ -151,6 +159,8 @@ class SoilLayer:
     def plant_seed(self, target_pos, seed):
         for sprite in self.soil_sprites.sprites():
             if sprite.rect.collidepoint(target_pos):
+                # play sound
+                self.plant_sound.play()
                 x, y = sprite.rect.x, sprite.rect.y
                 self.grid[y // TS][x // TS].append('P')
                 Plant(seed, [self.all_sprites, self.plant_sprites, self.collision_sprites], sprite, self.is_watered)

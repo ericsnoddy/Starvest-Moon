@@ -7,6 +7,7 @@ import pygame as pg
 # local
 from settings import *
 from timer import Timer
+# from sound import Sound
 
 
 class BasicSprite(pg.sprite.Sprite):
@@ -85,7 +86,6 @@ class Tree(BasicSprite):
         self.start_health = self.health = int(f"{TREE_HEALTH_SM if name == 'Small' else TREE_HEALTH_LG}")
         self.dead = False        
         self.stump_surf = pg.image.load(f"graphics/stumps/{'small' if name == 'Small' else 'large'}.png")
-        self.invul_timer = Timer(200)
 
         # apples
         self.apple_surf = pg.image.load('graphics/plants/apple.png').convert_alpha()
@@ -96,9 +96,13 @@ class Tree(BasicSprite):
         # harvest
         self.inventory_add = add_func
 
+        # sound
+        self.axe_sound = pg.mixer.Sound('audio/axe.mp3')
+
         # note: self.groups()[0] will be a reference to level.all_sprites
         # (sprite.groups() returns list of groups the sprite belongs to, in order of insertion)
         # this is a clever workaround for not having direct access to that group
+
 
     def update(self, dt):
         if not self.dead: 
@@ -112,6 +116,7 @@ class Tree(BasicSprite):
 
     def damage(self):
         self.health -= 1
+        self.axe_sound.play()
         # remove an apple
         if len(self.apple_sprites.sprites()) > 0:
             random_apple = choice(self.apple_sprites.sprites())

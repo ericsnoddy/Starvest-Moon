@@ -68,6 +68,9 @@ class Player(pg.sprite.Sprite):
         self.soil_layer = soil_layer
         self.toggle_shop = toggle_shop_func
 
+        # sound
+        self.watering_sound = pg.mixer.Sound('audio/water.mp3')
+        self.watering_sound.set_volume(0.85)
 
     def update(self, dt):
         self.input()
@@ -93,6 +96,7 @@ class Player(pg.sprite.Sprite):
         # watering
         elif self.selected_tool == 'water':
             self.soil_layer.water(self.target_pos)
+            self.watering_sound.play()
 
 
     def get_target_pos(self):
@@ -168,6 +172,7 @@ class Player(pg.sprite.Sprite):
             # misc interaction
             # new day (bed)
             if keys[K_RETURN]:
+                self.toggle_shop()
                 # this is the old way to do it
                 # interaction_point = [zone for zone in self.interaction_sprites.sprites() if zone.rect.collidepoint(self.rect)]
                 interaction_point = pg.sprite.spritecollide(self, self.interaction_sprites, False)

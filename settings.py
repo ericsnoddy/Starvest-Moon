@@ -5,7 +5,7 @@ FPS = 60
 # player and interactables
 PLAYER_SPEED = 350
 PLAYER_HITBOX_SCALE = -126, -70
-START_MONEY = 200
+START_MONEY = 100
 TREE_HEALTH_SM = 4
 TREE_HEALTH_LG = 6
 TREE_HEAL = 3
@@ -13,17 +13,27 @@ TREE_HEAL = 3
 # animation
 PLAYER_ANIM_RATE = 3
 ANIM_RATE = 5
-RAIN_CHANCE = 100
+RAIN_CHANCE = 30
 
 # overlay positions 
 OVERLAY_POSITIONS = {
-	'tool' : (40, HEIGHT - 15), 
-	'seed': (70, HEIGHT - 5)}
+	'tool' : (50, HEIGHT - 25), 
+	'seed': (80, HEIGHT - 15)}
 
 # menu
+MENU_FONT_SIZE = 50
 MENU_WIDTH = 400
 MENU_SPACE = 10
-MENU_PADDING = 8
+MENU_PAD = 8
+MENU_BORDER = 5
+TEXT_PAD = 20
+CORNER_RADIUS = 4  # lower is rounder
+INPUT_COOLDOWN = 200
+BUY_COLOR = 'crimson'
+SELL_COLOR = 'chartreuse4'
+MENU_BG_COLOR = 'white'
+MENU_FONT_COLOR = 'black'
+MENU_BORDER_COLOR = 'black'
 
 # transitions
 TRANSITION_SPEED = -5  # lower number -> faster transition
